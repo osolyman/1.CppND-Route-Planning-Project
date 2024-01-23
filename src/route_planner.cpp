@@ -8,113 +8,85 @@ RoutePlanner::RoutePlanner(RouteModel &model, float start_x, float start_y, floa
     end_x *= 0.01;
     end_y *= 0.01;
 
-    // TODO 2: Use the m_Model.FindClosestNode method to find the closest nodes to the starting and ending coordinates.
-    // Store the nodes you find in the RoutePlanner's start_node and end_node attributes.
-	start_node = &m_Model.FindClosestNode(start_x, start_y);
+    // 2nd Implementation: Finding the closest node to the starting and ending coordinates
+	  start_node = &m_Model.FindClosestNode(start_x, start_y);
   	end_node = &m_Model.FindClosestNode(end_x, end_y);
 }
 
-
-// TODO 3: Implement the CalculateHValue method.
-// Tips:
-// - You can use the distance to the end_node for the h value.
-// - Node objects have a distance method to determine the distance to another node.
+// 3rd Implementation: Calculating the h-value.
+// the distance to the end_node is used for the calculation.
 float RoutePlanner::CalculateHValue(RouteModel::Node const *node) {
-	return node->distance(*end_node);
+	return node->distance(*end_node); // calling the distance method from class Node in route_model.h
 }
 
-
-// TODO 4: Complete the AddNeighbors method to expand the current node by adding all unvisited neighbors to the open list.
-// Tips:
-// - Use the FindNeighbors() method of the current_node to populate current_node.neighbors vector with all the neighbors.
-// - For each node in current_node.neighbors, set the parent, the h_value, the g_value. 
-// - Use CalculateHValue below to implement the h-Value calculation.
-// - For each node in current_node.neighbors, add the neighbor to open_list and set the node's visited attribute to true.
-
+// 4th Implementation: expanding the current node by adding all unvisited neighbors to the open list.
 void RoutePlanner::AddNeighbors(RouteModel::Node *current_node) {
-  current_node->FindNeighbors();
+  current_node->FindNeighbors(); //first we find the neighbors of the node by calling the the necessary method for that.
   
+  //iterating over each node in the neighbors
   for(RouteModel::Node *neighborNode : current_node->neighbors){
-    neighborNode->h_value = CalculateHValue(neighborNode);
-	neighborNode->parent = current_node;  
-  	neighborNode->g_value = current_node->g_value + current_node->distance(*neighborNode);
+    neighborNode->h_value = CalculateHValue(neighborNode); // setting h_value for each neighbor node
+	  neighborNode->parent = current_node; //setting parent_node for each neighbor node
+  	neighborNode->g_value = current_node->g_value + current_node->distance(*neighborNode); //setting g_value for each neighbor node
+    //if that neigbor node still not visited
     if(!neighborNode->visited){
-      open_list.emplace_back(neighborNode);
-      neighborNode->visited = true;
+      open_list.emplace_back(neighborNode); //then add it to the open_list.
+      neighborNode->visited = true; //now mark it as visited
     }
   }
 }
 
-// TODO 5: Complete the NextNode method to sort the open list and return the next node.
-// Tips:
-// - Sort the open_list according to the sum of the h value and g value.
-// - Create a pointer to the node in the list with the lowest sum.
-// - Remove that node from the open_list.
-// - Return the pointer.
-
+// 5th Implementation: sorting the open list and returning the next node.
 RouteModel::Node *RoutePlanner::NextNode() {
-  
-  sort(open_list.begin(), open_list.end(), [](RouteModel::Node *n1, RouteModel::Node *n2) {
+  //using sort function from algorithm library with lambda function to costum the sorting criteria
+  std::sort(open_list.begin(), open_list.end(), [](RouteModel::Node *n1, RouteModel::Node *n2) {
     return (n1->h_value + n1->g_value) > (n2->h_value + n2->g_value); }); 
   
-  RouteModel::Node *listNode = open_list.back(); 
-  open_list.pop_back();
-  return listNode;
+  RouteModel::Node *listNode = open_list.back(); //getting the node with the lowest sum of g and h value. 
+  open_list.pop_back(); //removing that node from the open_list
+  return listNode; //returning the pointer to that node
 }
 
-
-// TODO 6: Complete the ConstructFinalPath method to return the final path found from your A* search.
-// Tips:
-// - This method should take the current (final) node as an argument and iteratively follow the 
-//   chain of parents of nodes until the starting node is found.
-// - For each node in the chain, add the distance from the node to its parent to the distance variable.
-// - The returned vector should be in the correct order: the start node should be the first element
-//   of the vector, the end node should be the last element.
-
+// 6th Implementation: returning the final path found from my A* search.
 std::vector<RouteModel::Node> RoutePlanner::ConstructFinalPath(RouteModel::Node *current_node) {
     // Create path_found vector
     distance = 0.0f;
     std::vector<RouteModel::Node> path_found;
 
-    // TODO: Implement your solution here.
+    // iterating backwards until the starting node is found.
 	while(current_node != nullptr) {
-      path_found.push_back(*current_node);
+      path_found.push_back(*current_node); //pushing the current node to vector of nodes
       
+      //checking if the current node has a parent (except for the starting node)
       if(current_node->parent != nullptr) {
-        distance += current_node->distance(*(current_node->parent));
+        distance += current_node->distance(*(current_node->parent)); //then adding the distance of the current node to its parent to the total distance
       }
-      
-      current_node = current_node->parent;
+      current_node = current_node->parent; // now updating the current node to become its parent
     }
   
-    reverse(path_found.begin(), path_found.end());
+    reverse(path_found.begin(), path_found.end()); //reversing the path_found vector to obtain the path from the starting node to the end
     
     distance *= m_Model.MetricScale(); // Multiply the distance by the scale of the map to get meters.
     return path_found;
-
 }
 
-
-// TODO 7: Write the A* Search algorithm here.
-// Tips:
-// - Use the AddNeighbors method to add all of the neighbors of the current node to the open_list.
-// - Use the NextNode() method to sort the open_list and return the next node.
-// - When the search has reached the end_node, use the ConstructFinalPath method to return the final path that was found.
-// - Store the final path in the m_Model.path attribute before the method exits. This path will then be displayed on the map tile.
-
+// 7th Implementation: Writing the A* Search algorithm.
 void RoutePlanner::AStarSearch() {
-    RouteModel::Node *current_node = nullptr;
+    RouteModel::Node *current_node = nullptr; //declaring a pointer to a Node and initializing it to nullptr
 	  
     // TODO: Implement your solution here.
-    start_node->visited = true; // I was stuck in the while loop because the start_node->visited was set to false the whole time. after 	searching and looking on internet I found it out.
-  	open_list.push_back(start_node);
-  
+    start_node->visited = true; // marking the starting node as visited
+  	open_list.push_back(start_node); // adding the starting node to the open_list
+
+      // iterating through the open_list until it becomes empty
       while(!open_list.empty()) {
-        current_node = NextNode();
+        current_node = NextNode(); // the current node is now pointing to the next node in the open_list
+        // returning and indicating that the final path has been found in case the current node is equal to the end node
         if(current_node == end_node) {
           m_Model.path = ConstructFinalPath(current_node);
           return;
-        }  
+        }
+        // if the end node hasn't been reached yet, we add the neighbors of the current node to the open list.  
   	    AddNeighbors(current_node);
      }
      std::cout << "no path found!\n";

@@ -59,3 +59,13 @@ The testing executable is also placed in the `build` directory. From within `bui
 ./test
 ```
 
+## My Implementations
+* in main.cpp:
+  * lines (54 - 70): Variables for the starting and ending coordinates have been added, allowing the user to choose both the starting and ending points.
+* in route_planner.cpp:
+  * lines (11 - 14): In the constructor, finding the closest node to the starting and ending coordinates. 
+  * lines (16 - 20): In CalculateHValue method, calculating the h-value by determining the distance to the end node.
+  * lines (22 - 37): In AddNeighbors method, adding the neighbors of the current node to a vector of nodes.
+  * lines (39 - 48): In NextNode method, sorting the neighbors in the open_list to obtain the node with lowest sum of h and g values, representing the shortest path.
+  * lines (50 - 71): In ConstructFinalPath method, finding the final path to the destination.
+  * lines (73 - 93): In AStarSearch method, implementing the A* Search algorithm 
